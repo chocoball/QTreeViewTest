@@ -92,7 +92,7 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 	if ( !index.isValid() ) {
 		return Qt::ItemIsEnabled ;
 	}
-	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable ;
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled ;
 }
 
 bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -170,7 +170,59 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
 	return QVariant() ;
 }
 
-void TreeModel::addTree(QString &str, QModelIndex &parent)
+// drag and drop 処理 ----------------------------------------
+Qt::DropActions TreeModel::supportedDropActions() const
+{
+	return Qt::CopyAction | Qt::MoveAction ;
+}
+
+QStringList TreeModel::mimeTypes() const
+{
+	QStringList types ;
+	types << "application/tree.item.list" ;
+	return types ;
+}
+
+QMimeData *TreeModel::mimeData(const QModelIndexList &indexes) const
+{
+	QMimeData *mimeData = new QMimeData() ;
+	QByteArray encodeData ;
+
+	QDataStream stream(&encodeData, QIODevice::WriteOnly) ;
+	foreach ( const QModelIndex &index, indexes ) {
+		if ( index.isValid() ) {
+			QString text = data(index, Qt::DisplayRole).toString() ;
+			stream << text ;
+		}
+	}
+	mimeData->setData("application/tree.item.list", encodeData) ;
+	return mimeData ;
+}
+
+bool TreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+	if ( action == Qt::IgnoreAction ) { return true ; }
+	if ( !data->hasFormat("application/tree.item.list") ) { return false ; }
+	if ( column > 0 ) { return false ; }
+
+	int beginRow ;
+	if ( row != -1 ) { beginRow = row ; }
+	else if ( parent.isValid() ) { beginRow = parent.row() ; }
+	else { beginRow = rowCount(QModelIndex()) ; }
+
+	QByteArray encodeData = data->data("application/tree.item.list") ;
+	QDataStream stream(&encodeData, QIODevice::ReadOnly) ;
+
+	while ( !stream.atEnd() ) {
+		QString text ;
+		stream >> text ;
+		addTree(text, parent) ;
+	}
+	return true ;
+}
+// drag and drop 処理 ここまで ----------------------------------
+
+void TreeModel::addTree(QString &str, const QModelIndex &parent)
 {
 	TreeItem *p = m_pRootItem ;
 	if ( parent.isValid() ) {

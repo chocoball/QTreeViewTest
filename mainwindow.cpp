@@ -10,6 +10,13 @@ MainWindow::MainWindow(QWidget *parent) :
 	m_pTreeModel = new TreeModel(this) ;
 	ui->treeView->setModel(m_pTreeModel) ;
 
+	// drag and drop 追加
+	ui->treeView->setDragEnabled(true) ;
+	ui->treeView->setAcceptDrops(true) ;
+	ui->treeView->setDropIndicatorShown(true) ;
+	ui->treeView->setDragDropMode(QAbstractItemView::InternalMove) ;
+	// ------------------
+
 	connect(ui->pushButton_add, SIGNAL(clicked()), this, SLOT(slot_clickAdd())) ;
 	connect(ui->pushButton_del, SIGNAL(clicked()), this, SLOT(slot_clickDel())) ;
 	connect(ui->treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(slot_clickTree(QModelIndex))) ;

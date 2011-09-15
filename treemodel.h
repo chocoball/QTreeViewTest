@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include <QStringList>
+#include <QMimeData>
 
 class TreeItem ;
 
@@ -24,7 +25,14 @@ public:
 	QModelIndex parent(const QModelIndex &child) const ;
 	QVariant headerData(int section, Qt::Orientation orientation, int role) const ;
 
-	void addTree(QString &str, QModelIndex &parent) ;
+	// drag and drop 追加
+	Qt::DropActions supportedDropActions() const ;
+	QStringList mimeTypes() const ;
+	QMimeData *mimeData(const QModelIndexList &indexes) const ;
+	bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) ;
+	// -----------------
+
+	void addTree(QString &str, const QModelIndex &parent) ;
 	void removeTree(QModelIndex &parent) ;
 signals:
 
