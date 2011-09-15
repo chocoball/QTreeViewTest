@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	connect(ui->pushButton_add, SIGNAL(clicked()), this, SLOT(slot_clickAdd())) ;
 	connect(ui->pushButton_del, SIGNAL(clicked()), this, SLOT(slot_clickDel())) ;
+	connect(ui->pushButton_dump, SIGNAL(clicked()), this, SLOT(slot_clickDump())) ;
 	connect(ui->treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(slot_clickTree(QModelIndex))) ;
 }
 
@@ -41,6 +42,11 @@ void MainWindow::slot_clickDel()
 	m_pTreeModel->removeTree(m_selIndex) ;
 	m_selIndex = QModelIndex() ;
 	ui->treeView->setCurrentIndex(m_selIndex);
+}
+
+void MainWindow::slot_clickDump()
+{
+	m_pTreeModel->dumpTreeItems() ;
 }
 
 void MainWindow::slot_clickTree(QModelIndex index)

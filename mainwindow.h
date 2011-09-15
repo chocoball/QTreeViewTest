@@ -20,6 +20,7 @@ public:
 public slots:
 	void slot_clickAdd() ;
 	void slot_clickDel() ;
+	void slot_clickDump() ;
 	void slot_clickTree(QModelIndex index) ;
 
 private:

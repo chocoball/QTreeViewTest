@@ -34,6 +34,12 @@ public:
 
 	void addTree(QString &str, const QModelIndex &parent) ;
 	void removeTree(QModelIndex &parent) ;
+
+	void dumpTreeItems() ;
+
+private:
+	void _dump(TreeItem *p, int tab) ;
+
 signals:
 
 public slots:

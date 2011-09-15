@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "treemodel.h"
 
 class TreeItem
@@ -92,7 +93,8 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 	if ( !index.isValid() ) {
 		return Qt::ItemIsEnabled ;
 	}
-	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled ;
+	return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable
+		 | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled ;		// drag and drop処理入れる時は追加
 }
 
 bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -242,4 +244,30 @@ void TreeModel::removeTree(QModelIndex &index)
 
 	removeRows(index.row(), 1, index.parent()) ;
 }
+
+void TreeModel::dumpTreeItems()
+{
+	TreeItem *p = m_pRootItem ;
+	int tab = 0 ;
+	qDebug() << p->data() ;
+	for ( int i = 0 ; i < p->childCount() ; i ++ ) {
+		_dump(p->child(i), tab + 1) ;
+	}
+	qDebug() << "dump end---------" ;
+}
+
+void TreeModel::_dump(TreeItem *p, int tab)
+{
+	QString t ;
+	for ( int i = 0 ; i < tab ; i ++ ) {
+		t += " " ;
+	}
+	t += p->data() ;
+	qDebug() << t ;
+
+	for ( int i = 0 ; i < p->childCount() ; i ++ ) {
+		_dump(p->child(i), tab + 1) ;
+	}
+}
+
 
