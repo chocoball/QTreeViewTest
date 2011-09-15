@@ -4,12 +4,14 @@
 class TreeItem
 {
 public:
+	TreeItem() {}
 	TreeItem(QString str, TreeItem *parent) :
 		m_str(str), m_pParent(parent)
 	{
 	}
 	~TreeItem()
 	{
+		qDebug() << "~TreeItem:" << m_str ;
 		qDeleteAll(m_children) ;
 	}
 	void appendChild(TreeItem *pChild) { m_children.append(pChild) ; }
@@ -40,12 +42,20 @@ public:
 		return 0 ;
 	}
 
+	void copy(TreeItem *p)
+	{
+		m_str = p->m_str ;
+		for ( int i = 0 ; i < p->m_children.size() ; i ++ ) {
+			insertChild(i, new TreeItem(p->m_children[i]->m_str, this)) ;
+			this->m_children[i]->copy(p->m_children[i]) ;
+		}
+	}
+
 private:
 	QString				m_str ;
 	TreeItem			*m_pParent ;
 	QList<TreeItem *>	m_children ;
 } ;
-
 
 TreeModel::TreeModel(QObject *parent) :
 	QAbstractItemModel(parent)
@@ -193,8 +203,7 @@ QMimeData *TreeModel::mimeData(const QModelIndexList &indexes) const
 	QDataStream stream(&encodeData, QIODevice::WriteOnly) ;
 	foreach ( const QModelIndex &index, indexes ) {
 		if ( index.isValid() ) {
-			QString text = data(index, Qt::DisplayRole).toString() ;
-			stream << text ;
+			stream << reinterpret_cast<quint64>(index.internalPointer()) ;
 		}
 	}
 	mimeData->setData("application/tree.item.list", encodeData) ;
@@ -203,28 +212,32 @@ QMimeData *TreeModel::mimeData(const QModelIndexList &indexes) const
 
 bool TreeModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
+	qDebug() << "dropMimeData" ;
+
 	if ( action == Qt::IgnoreAction ) { return true ; }
 	if ( !data->hasFormat("application/tree.item.list") ) { return false ; }
 	if ( column > 0 ) { return false ; }
-
-	int beginRow ;
-	if ( row != -1 ) { beginRow = row ; }
-	else if ( parent.isValid() ) { beginRow = parent.row() ; }
-	else { beginRow = rowCount(QModelIndex()) ; }
 
 	QByteArray encodeData = data->data("application/tree.item.list") ;
 	QDataStream stream(&encodeData, QIODevice::ReadOnly) ;
 
 	while ( !stream.atEnd() ) {
-		QString text ;
-		stream >> text ;
-		addTree(text, parent) ;
+		quint64 val ;
+		TreeItem *p ;
+		stream >> val ;
+		p = reinterpret_cast<TreeItem *>(val) ;
+
+		QString text = p->data() ;
+		QModelIndex index = addTree(text, parent) ;
+		TreeItem *newItem = static_cast<TreeItem *>(index.internalPointer()) ;
+		newItem->copy(p) ;
 	}
+	qDebug() << "dropMimeData end" ;
 	return true ;
 }
 // drag and drop 処理 ここまで ----------------------------------
 
-void TreeModel::addTree(QString &str, const QModelIndex &parent)
+QModelIndex TreeModel::addTree(QString &str, const QModelIndex &parent)
 {
 	TreeItem *p = m_pRootItem ;
 	if ( parent.isValid() ) {
@@ -236,6 +249,7 @@ void TreeModel::addTree(QString &str, const QModelIndex &parent)
 
 	QModelIndex index = this->index(row, 0, parent) ;
 	setData(index, str, Qt::DisplayRole) ;
+	return index ;
 }
 
 void TreeModel::removeTree(QModelIndex &index)
