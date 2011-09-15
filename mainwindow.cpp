@@ -1,4 +1,3 @@
-#include <QDebug>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -27,6 +26,7 @@ void MainWindow::slot_clickAdd()
 	count ++ ;
 	QString str = QString("%1").arg(count) ;
 	m_pTreeModel->addTree(str, m_selIndex);
+	ui->treeView->expand(m_selIndex);		// ツリーを展開する
 }
 
 void MainWindow::slot_clickDel()
@@ -38,6 +38,5 @@ void MainWindow::slot_clickDel()
 
 void MainWindow::slot_clickTree(QModelIndex index)
 {
-	qDebug() << "slot_clickTree valid:" << index.isValid() << " row:" << index.row() ;
 	m_selIndex = index ;
 }
